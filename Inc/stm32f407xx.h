@@ -75,7 +75,7 @@
 /*
  * ARM Cortex-M4 processor NVIC IABR register addresses
  */
-#define NVIC_IABR0 ((volatile uint32_t*)0xE000E300
+#define NVIC_IABR0 ((volatile uint32_t*)0xE000E300)  /*FIXED: missing closing parenthesis*/
 #define NVIC_IABR1 ((volatile uint32_t*)0xE000E304)
 #define NVIC_IABR2 ((volatile uint32_t*)0xE000E308)
 #define NVIC_IABR3 ((volatile uint32_t*)0xE000E30C)    /*Interrupt Active Bit registers 0-7*/
@@ -87,7 +87,7 @@
 /*
  * ARM Cortex-M4 processor NVIC IPR register addresses
  */
-#define NVIC_IPR0   ((volatile uint32_t*)0xE000E400) /*Interrupt Priority Registers 0-58*/
+#define NVIC_IPR0   ((volatile uint32_t*)0xE000E400) /*Interrupt Priority Registers 0-59*/
 #define NVIC_IPR1   ((volatile uint32_t*)0xE000E404)
 #define NVIC_IPR2   ((volatile uint32_t*)0xE000E408)
 #define NVIC_IPR3   ((volatile uint32_t*)0xE000E40C)
@@ -156,6 +156,16 @@
 #define IRQ_NO_SPI3   51
 
 /*
+ * I2C IRQ Numbers
+ */
+#define IRQ_NO_I2C1_EV   31
+#define IRQ_NO_I2C1_ER   32
+#define IRQ_NO_I2C2_EV   33
+#define IRQ_NO_I2C2_ER   34
+#define IRQ_NO_I2C3_EV   72
+#define IRQ_NO_I2C3_ER   73
+
+/*
  * ARM Cortex-M4 processor STIR register address
  */
 #define NVIC_STIR   ((volatile uint32_t*)0xE000EF00) /*Software Trigger Interrupt Register*/
@@ -164,6 +174,7 @@
  * ARM Cortex-M4 number of implemented priority bits
  */
 #define PRIOR_BITS_IMPLEMENTED 4
+
 /*
  * AHBx and APBx bus peripheral base addresses
  */
@@ -208,7 +219,7 @@
 #define USART1_BASE  0x40011000UL /*USART1*/
 #define USART6_BASE  0x40011400UL /*USART6*/
 #define EXTI_BASE    0x40013C00UL /*EXTI*/
-#define SYSCFG_BASE 0x40013800UL  /*SYSCFG*/
+#define SYSCFG_BASE  0x40013800UL /*SYSCFG*/
 
 /*
  * Peripheral register structure for GPIO
@@ -219,7 +230,7 @@ typedef struct{
 	uint32_t volatile OSPEEDR; /*GPIO port output speed register                offset: 0x08*/
 	uint32_t volatile PUPDR;   /*GPIO port pull-up/pull-down register           offset: 0x0C*/
 	uint32_t volatile IDR;     /*GPIO port input data register                  offset: 0x10*/
-	uint32_t volatile ODR;     /*GPIO port output data register         		offset: 0x14*/
+	uint32_t volatile ODR;     /*GPIO port output data register                 offset: 0x14*/
 	uint32_t volatile BSRR;    /*GPIO port bit set/reset register               offset: 0x18*/
 	uint32_t volatile LCKR;    /*GPIO port configuration lock register          offset: 0x1C*/
 	uint32_t volatile AFRL;    /*GPIO port alternative function low register    offset: 0x20*/
@@ -345,7 +356,7 @@ typedef struct{
 #define RCC_I2C3_CLK_ENABLE()    ((RCC->APB1ENR) |= (1 << 23))
 
 /*
- *Clock disable macro for I2Cx peripherals
+ * Clock disable macro for I2Cx peripherals
  */
 #define RCC_I2C1_CLK_DISABLE()    ((RCC->APB1ENR) &= ~(1 << 21))
 #define RCC_I2C2_CLK_DISABLE()    ((RCC->APB1ENR) &= ~(1 << 22))
@@ -401,15 +412,15 @@ typedef struct{
  * SYSCFG peripheral register structure
  */
 typedef struct{
-	uint32_t volatile MEMRMP;  /*Memory remap register                           offset: 0x00*/
-	uint32_t volatile PMC;     /*Peripheral mode configuration register          offset: 0x04*/
-	uint32_t volatile EXTICR[4]; /*External interrupt configuration register 1     offset: 0x08-0x14*/
-	uint32_t RESERVED1;        /*Reserved register                               offset: 0x18*/
-	uint32_t RESERVED2;        /*Reserved register                               offset: 0x1C*/
-	uint32_t volatile CMPCR;   /*Compensation cell control register              offset: 0x20*/
-	uint32_t RESERVED3;        /*Reserved register                               offset: 0x24*/
-	uint32_t RESERVED4;        /*Reserved register                               offset: 0x28*/
-	uint32_t volatile CFGR;    /*Configuration register                          offset: 0x2C*/
+	uint32_t volatile MEMRMP;    /*Memory remap register                           offset: 0x00*/
+	uint32_t volatile PMC;       /*Peripheral mode configuration register          offset: 0x04*/
+	uint32_t volatile EXTICR[4]; /*External interrupt configuration registers      offset: 0x08-0x14*/
+	uint32_t RESERVED1;          /*Reserved register                               offset: 0x18*/
+	uint32_t RESERVED2;          /*Reserved register                               offset: 0x1C*/
+	uint32_t volatile CMPCR;     /*Compensation cell control register              offset: 0x20*/
+	uint32_t RESERVED3;          /*Reserved register                               offset: 0x24*/
+	uint32_t RESERVED4;          /*Reserved register                               offset: 0x28*/
+	uint32_t volatile CFGR;      /*Configuration register                          offset: 0x2C*/
 }SYSCFG_REG_t;
 
 #define SYSCFG  ((SYSCFG_REG_t*)SYSCFG_BASE)
@@ -448,15 +459,15 @@ typedef struct{
  * SPI peripheral register structure
  */
 typedef struct{
-	uint32_t volatile CR1;          /*SPI Control Register 1                   offset: 0x00*/
-	uint32_t volatile CR2;          /*SPI Control Register 2                   offset: 0x04*/
-	uint32_t volatile SR;           /*SPI Status Register                      offset: 0x08*/
-	uint32_t volatile DR;           /*SPI Data Register                        offset: 0x0C*/
-	uint32_t volatile CRCPR;        /*CPI CRC polynomial Register              offset: 0x10*/
-	uint32_t volatile RXCRCR;       /*SPI RX CRC Register                      offset: 0x14*/
-	uint32_t volatile TXCRCR;       /*SPI TX CRC Register                      offset: 0x18*/
-	uint32_t volatile I2SCFGR;      /*SPI I2C Configuration Register           offset: 0x1C*/
-	uint32_t volatile I2SPR;        /*SPI I2S Prescaler Register               offset: 0x20*/
+	uint32_t volatile CR1;     /*SPI Control Register 1                   offset: 0x00*/
+	uint32_t volatile CR2;     /*SPI Control Register 2                   offset: 0x04*/
+	uint32_t volatile SR;      /*SPI Status Register                      offset: 0x08*/
+	uint32_t volatile DR;      /*SPI Data Register                        offset: 0x0C*/
+	uint32_t volatile CRCPR;   /*SPI CRC polynomial Register              offset: 0x10*/
+	uint32_t volatile RXCRCR;  /*SPI RX CRC Register                      offset: 0x14*/
+	uint32_t volatile TXCRCR;  /*SPI TX CRC Register                      offset: 0x18*/
+	uint32_t volatile I2SCFGR; /*SPI I2S Configuration Register           offset: 0x1C*/
+	uint32_t volatile I2SPR;   /*SPI I2S Prescaler Register               offset: 0x20*/
 }SPI_REG_t;
 
 /*
@@ -471,8 +482,8 @@ typedef struct{
  * Macros to reset SPIx peripherals
  */
 #define SPI1_REG_RESET() do{(RCC->APB2RSTR |= (1 << 12)); (RCC->APB2RSTR &= ~(1 << 12));}while(0)
-#define SPI2_REG_RESET() do{(RCC->APB1RSTR |= (1 << 14)); (RCC->APB2RSTR &= ~(1 << 14));}while(0)
-#define SPI3_REG_RESET() do{(RCC->APB1RSTR |= (1 << 15)); (RCC->APB2RSTR &= ~(1 << 15));}while(0)
+#define SPI2_REG_RESET() do{(RCC->APB1RSTR |= (1 << 14)); (RCC->APB1RSTR &= ~(1 << 14));}while(0)  /*FIXED: was APB2RSTR*/
+#define SPI3_REG_RESET() do{(RCC->APB1RSTR |= (1 << 15)); (RCC->APB1RSTR &= ~(1 << 15));}while(0)  /*FIXED: was APB2RSTR*/
 #define SPI4_REG_RESET() do{(RCC->APB2RSTR |= (1 << 13)); (RCC->APB2RSTR &= ~(1 << 13));}while(0)
 
 /*
@@ -505,7 +516,6 @@ typedef struct{
 #define SPI_CR2_RXNEIE     6
 #define SPI_CR2_TXEIE      7
 
-
 /*
  * SPI SR peripheral bit position definition macros
  */
@@ -518,6 +528,126 @@ typedef struct{
 #define SPI_SR_OVR       6
 #define SPI_SR_BSY       7
 #define SPI_SR_FRE       8
+
+/*
+ * I2C peripheral register structure
+ */
+typedef struct{
+	uint32_t volatile CR1;   /*I2C Control Register 1                   offset: 0x00*/
+	uint32_t volatile CR2;   /*I2C Control Register 2                   offset: 0x04*/
+	uint32_t volatile OAR1;  /*I2C Own Address Register 1               offset: 0x08*/
+	uint32_t volatile OAR2;  /*I2C Own Address Register 2               offset: 0x0C*/
+	uint32_t volatile DR;    /*I2C Data Register                        offset: 0x10*/
+	uint32_t volatile SR1;   /*I2C Status Register 1                    offset: 0x14*/
+	uint32_t volatile SR2;   /*I2C Status Register 2                    offset: 0x18*/
+	uint32_t volatile CCR;   /*I2C Clock Control Register               offset: 0x1C*/
+	uint32_t volatile TRISE; /*I2C TRISE Register                       offset: 0x20*/
+	uint32_t volatile FLTR;  /*I2C FLTR Register                        offset: 0x24*/
+}I2C_REG_t;
+
+/*
+ * I2C Peripheral Definitions
+ */
+#define I2C1 ((I2C_REG_t*)I2C1_BASE)
+#define I2C2 ((I2C_REG_t*)I2C2_BASE)
+#define I2C3 ((I2C_REG_t*)I2C3_BASE)
+
+/*
+ * Macros to reset I2Cx peripherals
+ */
+#define I2C1_REG_RESET() do{(RCC->APB1RSTR |= (1 << 21)); (RCC->APB1RSTR &= ~(1 << 21));}while(0)
+#define I2C2_REG_RESET() do{(RCC->APB1RSTR |= (1 << 22)); (RCC->APB1RSTR &= ~(1 << 22));}while(0)
+#define I2C3_REG_RESET() do{(RCC->APB1RSTR |= (1 << 23)); (RCC->APB1RSTR &= ~(1 << 23));}while(0)
+
+/*
+ * I2C CR1 peripheral bit position definition macros
+ */
+#define I2C_CR1_PE          0   /*Peripheral enable*/
+#define I2C_CR1_SMBUS       1   /*SMBus mode*/
+#define I2C_CR1_SMBTYPE     3   /*SMBus type*/
+#define I2C_CR1_ENARP       4   /*ARP enable*/
+#define I2C_CR1_ENPEC       5   /*PEC enable*/
+#define I2C_CR1_ENGC        6   /*General call enable*/
+#define I2C_CR1_NOSTRETCH   7   /*Clock stretching disable (slave mode)*/
+#define I2C_CR1_START       8   /*Start generation*/
+#define I2C_CR1_STOP        9   /*Stop generation*/
+#define I2C_CR1_ACK         10  /*Acknowledge enable*/
+#define I2C_CR1_POS         11  /*Acknowledge / PEC position (for data reception)*/
+#define I2C_CR1_PEC         12  /*Packet error checking*/
+#define I2C_CR1_ALERT       13  /*SMBus alert*/
+#define I2C_CR1_SWRST       15  /*Software reset*/
+
+/*
+ * I2C CR2 peripheral bit position definition macros
+ */
+#define I2C_CR2_FREQ        0   /*Peripheral clock frequency [5:0]*/
+#define I2C_CR2_ITERREN     8   /*Error interrupt enable*/
+#define I2C_CR2_ITEVTEN     9   /*Event interrupt enable*/
+#define I2C_CR2_ITBUFEN     10  /*Buffer interrupt enable*/
+#define I2C_CR2_DMAEN       11  /*DMA requests enable*/
+#define I2C_CR2_LAST        12  /*DMA last transfer*/
+
+/*
+ * I2C OAR1 peripheral bit position definition macros
+ */
+#define I2C_OAR1_ADD0       0   /*Interface address bit 0 (10-bit mode)*/
+#define I2C_OAR1_ADD1       1   /*Interface address bits [7:1]*/
+#define I2C_OAR1_ADD8       8   /*Interface address bits [9:8] (10-bit mode)*/
+#define I2C_OAR1_ADDMODE    15  /*Addressing mode: 0=7-bit, 1=10-bit*/
+
+/*
+ * I2C OAR2 peripheral bit position definition macros
+ */
+#define I2C_OAR2_ENDUAL     0   /*Dual addressing mode enable*/
+#define I2C_OAR2_ADD2       1   /*Interface address [7:1] in dual addressing mode*/
+
+/*
+ * I2C SR1 peripheral bit position definition macros
+ */
+#define I2C_SR1_SB          0   /*Start bit (master mode)*/
+#define I2C_SR1_ADDR        1   /*Address sent (master) / matched (slave)*/
+#define I2C_SR1_BTF         2   /*Byte transfer finished*/
+#define I2C_SR1_ADD10       3   /*10-bit header sent (master mode)*/
+#define I2C_SR1_STOPF       4   /*Stop detection (slave mode)*/
+#define I2C_SR1_RXNE        6   /*Data register not empty (receivers)*/
+#define I2C_SR1_TXE         7   /*Data register empty (transmitters)*/
+#define I2C_SR1_BERR        8   /*Bus error*/
+#define I2C_SR1_ARLO        9   /*Arbitration lost (master mode)*/
+#define I2C_SR1_AF          10  /*Acknowledge failure*/
+#define I2C_SR1_OVR         11  /*Overrun / underrun*/
+#define I2C_SR1_PECERR      12  /*PEC error in reception*/
+#define I2C_SR1_TIMEOUT     14  /*Timeout or Tlow error*/
+#define I2C_SR1_SMBALERT    15  /*SMBus alert*/
+
+/*
+ * I2C SR2 peripheral bit position definition macros
+ */
+#define I2C_SR2_MSL         0   /*Master / slave*/
+#define I2C_SR2_BUSY        1   /*Bus busy*/
+#define I2C_SR2_TRA         2   /*Transmitter / receiver*/
+#define I2C_SR2_GENCALL     4   /*General call address (slave mode)*/
+#define I2C_SR2_SMBDEFAULT  5   /*SMBus device default address (slave mode)*/
+#define I2C_SR2_SMBHOST     6   /*SMBus host header (slave mode)*/
+#define I2C_SR2_DUALF       7   /*Dual flag (slave mode)*/
+#define I2C_SR2_PEC         8   /*Packet error checking register [15:8]*/
+
+/*
+ * I2C CCR peripheral bit position definition macros
+ */
+#define I2C_CCR_CCR         0   /*Clock control register in Fm/Sm mode [11:0]*/
+#define I2C_CCR_DUTY        14  /*Fm mode duty cycle: 0=t_low/t_high=2, 1=t_low/t_high=16/9*/
+#define I2C_CCR_FS          15  /*I2C master mode selection: 0=Sm, 1=Fm*/
+
+/*
+ * I2C TRISE peripheral bit position definition macros
+ */
+#define I2C_TRISE_TRISE     0   /*Maximum rise time in Fm/Sm mode [5:0]*/
+
+/*
+ * I2C FLTR peripheral bit position definition macros
+ */
+#define I2C_FLTR_DNF        0   /*Digital noise filter [3:0]*/
+#define I2C_FLTR_ANOFF      4   /*Analog noise filter OFF*/
 
 /*
  * Generic macros
@@ -533,4 +663,7 @@ typedef struct{
 #define FLAG_RESET      RESET
 #define FLAG_SET        SET
 
+
+#include "gpio.h"
+#include "i2c.h"
 #endif /* STM32F407XX_H_ */
