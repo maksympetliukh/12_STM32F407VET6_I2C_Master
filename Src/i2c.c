@@ -94,22 +94,22 @@ void I2C_Init(I2C_Handle_t *pI2C_Handle){
 	uint16_t ccr_value = 0;
 	tempreg = 0;
 
-	if(pI2C_Handle->I2C_Config.I2C_SLCSpeed <= I2C_SCL_SPEED_SM){
+	if(pI2C_Handle->I2C_Config.I2C_SCLSpeed <= I2C_SCL_SPEED_SM){
 
 		//In case of Standard mode
-		ccr_value = RCC_GetPCLK1Value() / (2 * pI2C_Handle->I2C_Config.I2C_SLCSpeed);
+		ccr_value = RCC_GetPCLK1Value() / (2 * pI2C_Handle->I2C_Config.I2C_SCLSpeed);
 		tempreg |= (ccr_value & 0xFFF);
 
-	}else if(pI2C_Handle->I2C_Config.I2C_SLCSpeed <= I2C_SCL_SPEED_FM){
+	}else if(pI2C_Handle->I2C_Config.I2C_SCLSpeed <= I2C_SCL_SPEED_FM){
 
 		//In case of Fast mode
 		tempreg |= (1 << 15);
 		tempreg |= (pI2C_Handle->I2C_Config.I2C_FMDutyCycle << 14);
 
 		if(pI2C_Handle->I2C_Config.I2C_FMDutyCycle == I2C_FM_DUTY_2){
-			ccr_value = RCC_GetPCLK1Value() / (3 * pI2C_Handle->I2C_Config.I2C_SLCSpeed);
+			ccr_value = RCC_GetPCLK1Value() / (3 * pI2C_Handle->I2C_Config.I2C_SCLSpeed);
 		}else if(pI2C_Handle->I2C_Config.I2C_FMDutyCycle == I2C_FM_DUTY_16_9){
-			ccr_value = RCC_GetPCLK1Value() / (25 * pI2C_Handle->I2C_Config.I2C_SLCSpeed);
+			ccr_value = RCC_GetPCLK1Value() / (25 * pI2C_Handle->I2C_Config.I2C_SCLSpeed);
 		}
 		tempreg |= (ccr_value & 0xFFF);
 	}
@@ -118,7 +118,7 @@ void I2C_Init(I2C_Handle_t *pI2C_Handle){
 
 	//TRISE configuration
 	tempreg = 0;
-	if(pI2C_Handle->I2C_Config.I2C_SLCSpeed <= I2C_SCL_SPEED_SM){
+	if(pI2C_Handle->I2C_Config.I2C_SCLSpeed <= I2C_SCL_SPEED_SM){
 
 		//standard mode
 		tempreg = (RCC_GetPCLK1Value() / 1000000U) + 1;
@@ -178,6 +178,24 @@ void I2C_ClockControl(I2C_REG_t *pI2Cx, uint8_t en_di_mode){
 		}else if(pI2Cx == I2C3){
 			RCC_I2C3_CLK_DISABLE();
 		}
+	}
+}
+
+/*********************************************
+ * @fn           I2C_PeripheralControl
+ *
+ * @brief        This function enable I2C peripheral
+ *
+ * @param[in]    Pointer to the structure which contains I2C peripheral register base addresses
+ * @param[in]    Enable/Disable variable
+ *
+ * @return       none
+ */
+void I2C_PeripheralControl(I2C_REG_t *pI2Cx, uint8_t en_di_mode){
+	if(en_di_mode == ENABLE){
+		pI2Cx->CR1 |= (1 << I2C_CR1_PE);
+	}else if(en_di_mode == DISABLE){
+		pI2Cx->CR1 &= ~(1 << I2C_CR1_PE);
 	}
 }
 

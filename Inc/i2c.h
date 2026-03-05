@@ -12,7 +12,7 @@
 
 //Configuration structure for I2Cx peripheral
 typedef struct{
-	uint32_t I2C_SLCSpeed;
+	uint32_t I2C_SCLSpeed;
 	uint8_t I2C_DeviseAddress;
 	uint8_t I2C_AckControl;
 	uint16_t I2C_FMDutyCycle;
@@ -46,7 +46,7 @@ void I2C_DeInit(I2C_REG_t *pI2Cx);
 void I2C_ClockControl(I2C_REG_t *pI2Cx, uint8_t en_di_mode);
 void I2C_IRQ_InterruptConfig(uint8_t IRQ_Number, uint8_t en_di_mode);
 void I2C_IRQ_PriorityConfig(uint8_t IRQ_Number, uint8_t IRQ_Priority);
-void I2C_PeripheralControl(uint8_t IRQ_Number, uint8_t IRQ_Priority);
+void I2C_PeripheralControl(I2C_REG_t *pI2Cx, uint8_t en_di_mode);
 void I2C_ApplicationEventCallback(I2C_Handle_t *pI2CHandle, uint8_t event);
 uint8_t I2C_GetFlagStatus(I2C_REG_t *pI2Cx, uint32_t flag);
 uint32_t RCC_GetPCLK1Value(void);

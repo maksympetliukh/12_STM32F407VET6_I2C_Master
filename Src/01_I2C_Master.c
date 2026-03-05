@@ -20,5 +20,95 @@
 #include "gpio.h"
 #include "i2c.h"
 
+uint8_t tx[] = "Hello";
+uint8_t rx = 0;
+uint8_t ack = 0xFF;
+
+#define SLAVE_ADDR 0x11
+
+void Delay(void){for(uint32_t i = 0; i < 300000; i++);}
+
+void Button_Init(void){
+	GPIO_Handle_t button;
+
+	button.pGPIOx = GPIOE;
+	GPIO_ClockControl(GPIOE, ENABLE);
+
+	button.GPIOx_CFG.pin_number = GPIO_PIN_3;
+	button.GPIOx_CFG.pin_mode = GPIO_MODE_IN;
+	button.GPIOx_CFG.pin_speed = GPIO_OSPEED_HIGH;
+	button.GPIOx_CFG.pin_pu_pd_ctrl = GPIO_PIN_PU;
+
+	GPIO_Init(&button);
+}
+
+void LED_Init(void){
+	GPIO_Handle_t led;
+
+	led.pGPIOx = GPIOA;
+	GPIO_ClockControl(GPIOA, ENABLE);
+
+	led.GPIOx_CFG.pin_number = GPIO_PIN_7;
+	led.GPIOx_CFG.pin_mode = GPIO_MODE_OUT;
+	led.GPIOx_CFG.pin_op_type = GPIO_OUT_PP;
+	led.GPIOx_CFG.pin_pu_pd_ctrl = GPIO_NO_PUPD;
+	led.GPIOx_CFG.pin_speed = GPIO_OSPEED_HIGH;
+
+	GPIO_Init(&led);
+	GPIO_WritePin(GPIOA, GPIO_PIN_7, SET);
+}
+
+void I2C1_GPIO_Init(void){
+	GPIO_Handle_t i2c1_gpio;
+
+	i2c1_gpio.pGPIOx = GPIOB;
+	GPIO_ClockControl(GPIOB, ENABLE);
+
+	i2c1_gpio.GPIOx_CFG.pin_mode = GPIO_MODE_ALT_FN;
+	i2c1_gpio.GPIOx_CFG.pin_alt_func_mode = 4;
+	i2c1_gpio.GPIOx_CFG.pin_op_type = GPIO_OUT_OPDRN;
+	i2c1_gpio.GPIOx_CFG.pin_speed = GPIO_OSPEED_HIGH;
+	i2c1_gpio.GPIOx_CFG.pin_pu_pd_ctrl = GPIO_PIN_PU;
+
+	//SCL
+	i2c1_gpio.GPIOx_CFG.pin_number = GPIO_PIN_6;
+	GPIO_Init(&i2c1_gpio);
+
+	//SDA
+	i2c1_gpio.GPIOx_CFG.pin_number = GPIO_PIN_7;
+	GPIO_Init(&i2c1_gpio);
+}
+
+I2C_Handle_t i2c1;
+
+void I2C1_Init(){
+	i2c1.pI2Cx = I2C1;
+	I2C_ClockControl(I2C1, ENABLE);
+
+	i2c1.I2C_Config.I2C_AckControl = I2C_ACK_ENABLE;
+	i2c1.I2C_Config.I2C_SCLSpeed = I2C_SCL_SPEED_SM;
+	i2c1.I2C_Config.I2C_FMDutyCycle = I2C_FM_DUTY_2;
+
+	I2C_Init(&i2c1);
+}
+
 int main(void){
+	Button_Init();
+	LED_Init();
+	I2C1_GPIO_Init();
+	I2C1_Init();
+
+	while(1){
+		while(GPIO_ReadPin(GPIOE, GPIO_PIN_3) == 1);
+		Delay();
+
+		while(GPIO_ReadPin(GPIOE, GPIO_PIN_3) == 0);
+		Delay();
+
+		I2C_PeripheralControl(I2C1, ENABLE);
+
+		I2C_Master_Transmit(&i2c1, tx, strlen((char*)tx), SLAVE_ADDR);
+
+		I2C_PeripheralControl(I2C1, DISABLE);
+	}
 }
