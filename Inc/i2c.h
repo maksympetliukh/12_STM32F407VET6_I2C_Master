@@ -23,6 +23,14 @@ typedef struct{
 typedef struct{
 	I2C_REG_t *pI2Cx;
 	I2C_Config_t I2C_Config;
+	uint8_t *pTxBuffer;
+	uint8_t *pRxBuffer;
+	uint32_t TxLen;
+	uint32_t RxLen;
+	uint8_t TxRxState;
+	uint8_t DevAddr;
+	uint32_t RxSize;
+	uint8_t Sr;
 }I2C_Handle_t;
 
 
@@ -51,11 +59,17 @@ void I2C_ApplicationEventCallback(I2C_Handle_t *pI2CHandle, uint8_t event);
 uint8_t I2C_GetFlagStatus(I2C_REG_t *pI2Cx, uint32_t flag);
 uint32_t RCC_GetPCLK1Value(void);
 uint32_t RCC_GetPLLOutputClock(void);
-void I2C_Master_Transmit(I2C_Handle_t *pI2C_Handle, uint8_t *pTxBuffer, uint8_t len, uint8_t SlaveAddr);
+void I2C_Master_Transmit(I2C_Handle_t *pI2C_Handle, uint8_t *pTxBuffer, uint8_t len, uint8_t SlaveAddr, uint8_t sr);
+void I2C_Master_Receive(I2C_Handle_t *pI2C_Handle, uint8_t *pRxBuffer, uint8_t len, uint8_t SlaveAddr, uint8_t sr);
 void I2C_GenerateStartCondition(I2C_REG_t *pI2Cx);
 void I2C_GenerateStopCondition(I2C_REG_t *pI2Cx);
 void I2C_ExecuteAddressPhase(I2C_REG_t *pI2Cx, uint8_t SlaveAddr);
 void I2C_ClearADDRFlag(I2C_REG_t *pI2Cx);
+void I2C_AckControl(I2C_REG_t *pI2Cx, uint8_t en_di_mode);
+uint8_t I2C_Master_Transmit_IT(I2C_Handle_t *pI2C_Handle, uint8_t *pTxBuffer, uint8_t len, uint8_t SlaveAddr, uint8_t sr);
+uint8_t I2C_Master_Receive_IT(I2C_Handle_t *pI2C_Handle, uint8_t *pTxBuffer, uint8_t len, uint8_t SlaveAddr, uint8_t sr);
+void I2C_Slave_Transmit();
+void I2C_Slave_Receive();
 
 /*
  * I2C Flags
@@ -75,4 +89,16 @@ void I2C_ClearADDRFlag(I2C_REG_t *pI2Cx);
 #define I2C_TIMEOUT_FLAG     (1 << I2C_SR1_TIMEOUT)
 #define I2C_SMBALERT_FLAG    (1 << I2C_SR1_SMBALERT)
 
+/*
+ * I2C Repeated Start flag macros
+ */
+#define I2C_SR_EN       1
+#define I2C_SR_DI       0
+
+/*
+ * I2C application states
+ */
+#define I2C_READY       0
+#define I2C_BUSY_IN_RX  1
+#define I2C_BUSY_IN_TX  2
 #endif /* I2C_H_ */

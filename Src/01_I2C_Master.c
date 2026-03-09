@@ -21,8 +21,10 @@
 #include "i2c.h"
 
 uint8_t tx[] = "Hello";
-uint8_t rx = 0;
+uint8_t rx[32];
 uint8_t ack = 0xFF;
+uint8_t len;
+
 
 #define SLAVE_ADDR 0x11
 
@@ -106,8 +108,20 @@ int main(void){
 		Delay();
 
 		I2C_PeripheralControl(I2C1, ENABLE);
+		I2C_AckControl(I2C1, I2C_ACK_ENABLE);
 
-		I2C_Master_Transmit(&i2c1, tx, strlen((char*)tx), SLAVE_ADDR);
+		I2C_Master_Transmit(&i2c1, tx, strlen((char*)tx), SLAVE_ADDR, I2C_SR_EN);
+
+		I2C_Master_Receive(&i2c1, &len, 1, SLAVE_ADDR, I2C_SR_EN);
+
+		I2C_Master_Receive(&i2c1, rx, len, SLAVE_ADDR, I2C_SR_DI);
+		rx[len] = '\0';
+
+		if(strcmp((char*)rx, "World") == 0){
+			GPIO_WritePin(GPIOA, GPIO_PIN_7, RESET);
+			Delay();
+			GPIO_WritePin(GPIOA, GPIO_PIN_7, SET);
+		}
 
 		I2C_PeripheralControl(I2C1, DISABLE);
 	}
