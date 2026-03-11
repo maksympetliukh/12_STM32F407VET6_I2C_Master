@@ -54,6 +54,8 @@ void I2C_DeInit(I2C_REG_t *pI2Cx);
 void I2C_ClockControl(I2C_REG_t *pI2Cx, uint8_t en_di_mode);
 void I2C_IRQ_InterruptConfig(uint8_t IRQ_Number, uint8_t en_di_mode);
 void I2C_IRQ_PriorityConfig(uint8_t IRQ_Number, uint8_t IRQ_Priority);
+void I2C_IRQ_EV_Handler(I2C_Handle_t *pI2C_Handle);
+void I2C_IRQ_ER_Handler(I2C_Handle_t *pI2C_Handle);
 void I2C_PeripheralControl(I2C_REG_t *pI2Cx, uint8_t en_di_mode);
 void I2C_ApplicationEventCallback(I2C_Handle_t *pI2CHandle, uint8_t event);
 uint8_t I2C_GetFlagStatus(I2C_REG_t *pI2Cx, uint32_t flag);
@@ -63,13 +65,15 @@ void I2C_Master_Transmit(I2C_Handle_t *pI2C_Handle, uint8_t *pTxBuffer, uint8_t 
 void I2C_Master_Receive(I2C_Handle_t *pI2C_Handle, uint8_t *pRxBuffer, uint8_t len, uint8_t SlaveAddr, uint8_t sr);
 void I2C_GenerateStartCondition(I2C_REG_t *pI2Cx);
 void I2C_GenerateStopCondition(I2C_REG_t *pI2Cx);
-void I2C_ExecuteAddressPhase(I2C_REG_t *pI2Cx, uint8_t SlaveAddr);
+void I2C_ExecuteAddressPhase_TX(I2C_REG_t *pI2Cx, uint8_t SlaveAddr);
+void I2C_ExecuteAddressPhase_RX(I2C_REG_t *pI2Cx, uint8_t SlaveAddr);
 void I2C_ClearADDRFlag(I2C_REG_t *pI2Cx);
 void I2C_AckControl(I2C_REG_t *pI2Cx, uint8_t en_di_mode);
 uint8_t I2C_Master_Transmit_IT(I2C_Handle_t *pI2C_Handle, uint8_t *pTxBuffer, uint8_t len, uint8_t SlaveAddr, uint8_t sr);
 uint8_t I2C_Master_Receive_IT(I2C_Handle_t *pI2C_Handle, uint8_t *pTxBuffer, uint8_t len, uint8_t SlaveAddr, uint8_t sr);
 void I2C_Slave_Transmit();
 void I2C_Slave_Receive();
+void I2C_CloseTransmission();
 
 /*
  * I2C Flags
@@ -101,4 +105,11 @@ void I2C_Slave_Receive();
 #define I2C_READY       0
 #define I2C_BUSY_IN_RX  1
 #define I2C_BUSY_IN_TX  2
+
+/*
+ * I2C event macros
+ */
+#define I2C_EV_TX_CMPLT    1
+#define I2C_EV_RX_CMPLT    2
+#define I2C_EV_STOP        3
 #endif /* I2C_H_ */
