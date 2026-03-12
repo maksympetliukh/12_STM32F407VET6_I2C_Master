@@ -67,13 +67,14 @@ void I2C_GenerateStartCondition(I2C_REG_t *pI2Cx);
 void I2C_GenerateStopCondition(I2C_REG_t *pI2Cx);
 void I2C_ExecuteAddressPhase_TX(I2C_REG_t *pI2Cx, uint8_t SlaveAddr);
 void I2C_ExecuteAddressPhase_RX(I2C_REG_t *pI2Cx, uint8_t SlaveAddr);
-void I2C_ClearADDRFlag(I2C_REG_t *pI2Cx);
+void I2C_ClearADDRFlag(I2C_Handle_t *pI2C_Handle);
 void I2C_AckControl(I2C_REG_t *pI2Cx, uint8_t en_di_mode);
 uint8_t I2C_Master_Transmit_IT(I2C_Handle_t *pI2C_Handle, uint8_t *pTxBuffer, uint8_t len, uint8_t SlaveAddr, uint8_t sr);
 uint8_t I2C_Master_Receive_IT(I2C_Handle_t *pI2C_Handle, uint8_t *pTxBuffer, uint8_t len, uint8_t SlaveAddr, uint8_t sr);
 void I2C_Slave_Transmit();
 void I2C_Slave_Receive();
-void I2C_CloseTransmission();
+void I2C_CloseTransmission(I2C_Handle_t *pI2C_Handle);
+void I2C_CLoseReception(I2C_Handle_t *pI2C_Handle);
 
 /*
  * I2C Flags
@@ -109,7 +110,14 @@ void I2C_CloseTransmission();
 /*
  * I2C event macros
  */
-#define I2C_EV_TX_CMPLT    1
-#define I2C_EV_RX_CMPLT    2
-#define I2C_EV_STOP        3
+#define I2C_EV_TX_CMPLT    0
+#define I2C_EV_RX_CMPLT    1
+#define I2C_EV_STOP        2
+#define I2C_ERROR_BERR     3
+#define I2C_ERROR_ARLO     4
+#define I2C_ERROR_AF       5
+#define I2C_ERROR_OVR      6
+#define I2C_ERROR_TIMEOUT  7
+
+
 #endif /* I2C_H_ */
