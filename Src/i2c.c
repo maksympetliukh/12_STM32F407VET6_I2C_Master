@@ -1,10 +1,9 @@
 /*
  * i2c.c
  *
- *  Created on: Mar 3, 2026
+ *  Created on: Mar 7, 2026
  *      Author: maksym
  */
-
 
 #include "i2c.h"
 
@@ -299,6 +298,13 @@ void I2C_CloseReception(I2C_Handle_t *pI2C_Handle){
 		I2C_AckControl(pI2C_Handle->pI2Cx, ENABLE);
 	}
 }
+
+void I2C_ClearSTOPF(I2C_Handle_t *pI2C_Handle){
+	uint32_t dummyRead;
+	dummyRead = pI2C_Handle->pI2Cx->SR1;
+	dummyRead = pI2C_Handle->pI2Cx->CR1;
+	(void)dummyRead;
+}
 /*********************************************
  * @fn           I2C_Master_Transmit
  *
@@ -437,7 +443,23 @@ void I2C_Master_Receive(I2C_Handle_t *pI2C_Handle, uint8_t *pRxBuffer, uint8_t l
  * @return        none
  */
 void I2C_IRQ_InterruptConfig(uint8_t IRQ_Number, uint8_t en_di_mode){
-
+	if(en_di_mode == ENABLE){
+			if(IRQ_Number <= 31){
+				*NVIC_ISER0 |= (1 << IRQ_Number);
+			}else if(IRQ_Number > 31 && IRQ_Number < 64){
+				*NVIC_ISER1 |= (1 << (IRQ_Number % 32));
+			}else if(IRQ_Number > 64 && IRQ_Number < 96){
+				*NVIC_ISER2 |= (1 << (IRQ_Number % 64));
+			}
+		}else{
+			if(IRQ_Number <= 31){
+				*NVIC_ICER0 |= (1 << IRQ_Number);
+			}else if(IRQ_Number > 31 && IRQ_Number < 64){
+				*NVIC_ICER1 |= (1 << (IRQ_Number % 32));
+			}else if(IRQ_Number > 64 && IRQ_Number < 96){
+				*NVIC_ICER2 |= (1 << (IRQ_Number % 64));
+			}
+		}
 }
 
 /*****************************************************************
@@ -451,7 +473,14 @@ void I2C_IRQ_InterruptConfig(uint8_t IRQ_Number, uint8_t en_di_mode){
  * @return          none
  */
 void I2C_IRQ_PriorityConfig(uint8_t IRQ_Number, uint8_t IRQ_Priority){
+	if(IRQ_Priority > 15) IRQ_Priority = 15;
 
+		uint8_t reg_index = IRQ_Number / 4;
+		uint8_t offset = IRQ_Number % 4;
+		uint8_t shift_amount = (8 * offset) + (8 - PRIOR_BITS_IMPLEMENTED);
+
+		*(NVIC_IRQ_PRIOR_BASE + (reg_index * 4)) &= ~(0xFFUL + (offset * 8));
+		*(NVIC_IRQ_PRIOR_BASE + (reg_index * 4)) |= (IRQ_Priority << shift_amount);
 }
 
 /*****************************************************************
@@ -749,3 +778,29 @@ void I2C_IRQ_ER_Handler(I2C_Handle_t *pI2C_Handle){
 	}
 }
 
+/*******************************************************************
+ * @fn           I2C_Slave_Transmit
+ *
+ * @brief        This function sends the data from slave to master
+ *
+ * @param[in]    Pointer to the structure with I2C peripheral register base addresses
+ * @param[in]    required data
+ *
+ * @return       none
+ */
+void I2C_Slave_Transmit(I2C_REG_t *pI2Cx, uint8_t data){
+	pI2Cx->DR = data;
+}
+
+/********************************************************************
+ * @fn            I2C_Slave_Receive
+ *
+ * @brief         This function returns the value from the DR
+ *
+ * @param         Pointer to the structure with I2C peripheral register base addresses
+ *
+ * return         data from the DR
+ */
+uint8_t I2C_Slave_Receive(I2C_REG_t *pI2Cx){
+	return pI2Cx->DR;
+}
