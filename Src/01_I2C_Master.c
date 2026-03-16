@@ -22,8 +22,7 @@
 #include <string.h>
 
 uint8_t tx = 0x01;
-uint8_t len;
-uint8_t rx;
+uint8_t buf[2];
 volatile uint8_t tx_done = 0;
 volatile uint8_t rx_flag = 0;
 volatile uint8_t phase = 0;
@@ -65,7 +64,7 @@ void LED_Init(void){
     GPIO_WritePin(GPIOA, GPIO_PIN_7, SET);
 }
 
-void I2C1_GPIO_Init(void){
+void I2C2_GPIO_Init(void){
     GPIO_Handle_t i2c_gpio;
 
     i2c_gpio.pGPIOx = GPIOB;
@@ -77,75 +76,60 @@ void I2C1_GPIO_Init(void){
     i2c_gpio.GPIOx_CFG.pin_speed = GPIO_OSPEED_HIGH;
     i2c_gpio.GPIOx_CFG.pin_pu_pd_ctrl = GPIO_PIN_PU;
 
-    i2c_gpio.GPIOx_CFG.pin_number = GPIO_PIN_6;
+    //SDA
+    i2c_gpio.GPIOx_CFG.pin_number = GPIO_PIN_11;
     GPIO_Init(&i2c_gpio);
 
-    i2c_gpio.GPIOx_CFG.pin_number = GPIO_PIN_7;
+    //SCL
+    i2c_gpio.GPIOx_CFG.pin_number = GPIO_PIN_10;
     GPIO_Init(&i2c_gpio);
 }
 
-I2C_Handle_t i2c1;
+I2C_Handle_t i2c2;
 
-void I2C1_EV_IRQHandler(void) { I2C_IRQ_EV_Handler(&i2c1); }
-void I2C1_ER_IRQHandler(void) { I2C_IRQ_ER_Handler(&i2c1); }
+void I2C2_EV_IRQHandler(void) { I2C_IRQ_EV_Handler(&i2c2); }
+void I2C2_ER_IRQHandler(void) { I2C_IRQ_ER_Handler(&i2c2); }
 
-void I2C1_Init(void){
-    i2c1.pI2Cx = I2C1;
+void I2C2_Init(void){
+    i2c2.pI2Cx = I2C2;
 
-    I2C_ClockControl(I2C1, ENABLE);
+    I2C_ClockControl(I2C2, ENABLE);
 
-    i2c1.I2C_Config.I2C_AckControl = I2C_ACK_ENABLE;
-    i2c1.I2C_Config.I2C_SCLSpeed = I2C_SCL_SPEED_SM;
-    i2c1.I2C_Config.I2C_FMDutyCycle = I2C_FM_DUTY_2;
+    i2c2.I2C_Config.I2C_AckControl = I2C_ACK_ENABLE;
+    i2c2.I2C_Config.I2C_SCLSpeed = I2C_SCL_SPEED_SM;
+    i2c2.I2C_Config.I2C_FMDutyCycle = I2C_FM_DUTY_2;
 
-    I2C_Init(&i2c1);
+    I2C_Init(&i2c2);
 }
 
 void I2C_ApplicationEventCallback(I2C_Handle_t *pI2C_Handle, uint8_t event){
-	if(event == I2C_EV_TX_CMPLT){
-		tx_done = 0;
-		phase = RX_LEN;
+    if(event == I2C_EV_TX_CMPLT){
+        I2C_Master_Receive_IT(&i2c2, buf, 2, SLAVE_ADDR, I2C_SR_DI);
 
-		I2C_Master_Receive_IT(&i2c1, &len, 1, SLAVE_ADDR, I2C_SR_EN);
-	}else if(event == I2C_EV_RX_CMPLT){
-		if(phase == RX_LEN){
-			phase = RX_DATA;
+    }else if(event == I2C_EV_RX_CMPLT){
+        rx_flag = 1;
 
-			I2C_Master_Receive_IT(&i2c1, &rx, 1, SLAVE_ADDR, I2C_SR_DI);
-			rx_flag = 1;
-	}else{
-		tx_done = 1;
-	}
-		}else if(event == I2C_EV_STOP){
-			tx_done = 0;
-			phase = 0;
-			rx_flag = 2;
-		}else if(event == I2C_ERROR_AF){
-			tx_done = 0;
-			phase = 0;
-			rx_flag = 3;
-
-			I2C_GenerateStopCondition(I2C1);
-			I2C_CloseTransmission(&i2c1);
-		}else{
-			tx_done = 0;
-			phase = 0;
-			rx_flag = 4;
-		}
+    }else if(event == I2C_ERROR_AF){
+        rx_flag = 3;
+        I2C_GenerateStopCondition(I2C2);
+        I2C_CloseTransmission(&i2c2);
+    }else{
+        rx_flag = 4;
+    }
 }
 
 int main(void)
 {
 	Button_Init();
     LED_Init();
-    I2C1_GPIO_Init();
-    I2C1_Init();
+    I2C2_GPIO_Init();
+    I2C2_Init();
 
-    I2C_IRQ_InterruptConfig(IRQ_NO_I2C1_EV, ENABLE);
-    I2C_IRQ_InterruptConfig(IRQ_NO_I2C1_ER, ENABLE);
+    I2C_IRQ_InterruptConfig(IRQ_NO_I2C2_EV, ENABLE);
+    I2C_IRQ_InterruptConfig(IRQ_NO_I2C2_ER, ENABLE);
 
-    I2C_PeripheralControl(I2C1, ENABLE);
-    I2C_AckControl(I2C1, I2C_ACK_ENABLE);
+    I2C_PeripheralControl(I2C2, ENABLE);
+    I2C_AckControl(I2C2, I2C_ACK_ENABLE);
 
     while(1){
     	while(GPIO_ReadPin(GPIOE, GPIO_PIN_3) == 1);
@@ -154,44 +138,25 @@ int main(void)
     	Delay();
 
 
-    	I2C_Master_Transmit_IT(&i2c1, &tx, 1, SLAVE_ADDR, I2C_SR_EN);
-
-    	while(i2c1.TxRxState != I2C_READY);
+    	I2C_Master_Transmit_IT(&i2c2, &tx, 1, SLAVE_ADDR, I2C_SR_EN);
 
     	if(rx_flag == 1){
     		GPIO_WritePin(GPIOA, GPIO_PIN_7, RESET);
     		Delay();
     		GPIO_WritePin(GPIOA, GPIO_PIN_7, SET);
     		Delay();
+    	}
 
-    		rx_flag = 0;
-    	}else if(rx_flag == 2){
-    		for(uint32_t i = 0; i < rx_flag; i++){
-    			GPIO_WritePin(GPIOA, GPIO_PIN_7, RESET);
-    			Delay();
-    			GPIO_WritePin(GPIOA, GPIO_PIN_7, SET);
-    			Delay();
-    		}
-
-    		rx_flag = 0;
-    	}else if(rx_flag == 3){
-    		for(uint32_t i = 0; i < rx_flag; i++){
-    		    GPIO_WritePin(GPIOA, GPIO_PIN_7, RESET);
-    		    Delay();
-    		    GPIO_WritePin(GPIOA, GPIO_PIN_7, SET);
-    		    Delay();
-    		}
-
-    		rx_flag = 0;
-    	}else if(rx_flag == 4){
-    		for(uint32_t i = 0; i < rx_flag; i++){
-    		   GPIO_WritePin(GPIOA, GPIO_PIN_7, RESET);
-    		   Delay();
-    		    GPIO_WritePin(GPIOA, GPIO_PIN_7, SET);
-    		    Delay();
-    		}
-
-    		rx_flag = 0;
+    	//while(i2c1.TxRxState != I2C_READY);
+    	if(rx_flag >= 2){
+    		uint8_t blinks = rx_flag;
+    	    rx_flag = 0;
+    	    for(uint32_t i = 0; i < blinks; i++){
+    	    	GPIO_WritePin(GPIOA, GPIO_PIN_7, RESET);
+    	    	Delay();
+    	    	GPIO_WritePin(GPIOA, GPIO_PIN_7, SET);
+    	    	Delay();
+    	    }
     	}
     }
 }

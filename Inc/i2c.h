@@ -35,6 +35,7 @@ typedef struct{
 
 
 //@I2C_SLCSpeed
+#define I2C_SCL_SPEED_10 10000
 #define I2C_SCL_SPEED_SM 100000
 #define I2C_SCL_SPEED_FM 400000
 #define I2C_SCL_SPEED_2K 200000
@@ -119,6 +120,9 @@ void I2C_ClearSTOPF(I2C_Handle_t *pI2C_Handle);
 #define I2C_ERROR_AF       5
 #define I2C_ERROR_OVR      6
 #define I2C_ERROR_TIMEOUT  7
+#define I2C_EV_DATA_REQ    8
+#define I2C_EV_DATA_RCV    9
+#define I2C_EV_ADDR_MATCH  10
 
 
 #endif /* I2C_H_ */
