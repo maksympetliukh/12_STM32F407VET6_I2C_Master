@@ -107,7 +107,7 @@ void I2C_ApplicationEventCallback(I2C_Handle_t *pI2C_Handle, uint8_t event){
         I2C_Master_Receive_IT(&i2c2, buf, 2, SLAVE_ADDR, I2C_SR_DI);
 
     }else if(event == I2C_EV_RX_CMPLT){
-        rx_flag = 1;
+        rx_flag = buf[1] + 1;
 
     }else if(event == I2C_ERROR_AF){
         rx_flag = 3;
@@ -131,23 +131,18 @@ int main(void)
     I2C_PeripheralControl(I2C2, ENABLE);
     I2C_AckControl(I2C2, I2C_ACK_ENABLE);
 
+    Delay();
+    Delay();
+    Delay();
+
     while(1){
     	while(GPIO_ReadPin(GPIOE, GPIO_PIN_3) == 1);
     	Delay();
     	while(GPIO_ReadPin(GPIOE, GPIO_PIN_3) == 0);
     	Delay();
 
-
     	I2C_Master_Transmit_IT(&i2c2, &tx, 1, SLAVE_ADDR, I2C_SR_EN);
 
-    	if(rx_flag == 1){
-    		GPIO_WritePin(GPIOA, GPIO_PIN_7, RESET);
-    		Delay();
-    		GPIO_WritePin(GPIOA, GPIO_PIN_7, SET);
-    		Delay();
-    	}
-
-    	//while(i2c1.TxRxState != I2C_READY);
     	if(rx_flag >= 2){
     		uint8_t blinks = rx_flag;
     	    rx_flag = 0;
