@@ -21,18 +21,21 @@
 #include "i2c.h"
 #include <string.h>
 
-uint8_t tx = 0x01;
-uint8_t buf[2];
+uint8_t tx[] = "Hello";
+uint8_t rx[32];
+uint8_t tx_len = 0;
+uint8_t rx_len = 0;
 volatile uint8_t tx_done = 0;
-volatile uint8_t rx_flag = 0;
+volatile uint8_t led_flag = 0;
 volatile uint8_t phase = 0;
+uint8_t rx_wait = 0;
 
 #define RX_LEN   0
 #define RX_DATA  1
 
 #define SLAVE_ADDR 0x55
 
-void Delay(void){for(volatile uint32_t i = 0; i < 400000; i++);}
+void Delay(void){for(volatile uint32_t i = 0; i < 200000; i++);}
 
 void Button_Init(void){
     GPIO_Handle_t button;
@@ -104,22 +107,36 @@ void I2C2_Init(void){
 
 void I2C_ApplicationEventCallback(I2C_Handle_t *pI2C_Handle, uint8_t event){
     if(event == I2C_EV_TX_CMPLT){
-        I2C_Master_Receive_IT(&i2c2, buf, 2, SLAVE_ADDR, I2C_SR_DI);
-
+    	led_flag = 1;
+    	if(tx_done == 0){
+    	phase = RX_LEN;
+    	I2C_Master_Receive_IT(&i2c2, &rx_len, 1, SLAVE_ADDR, I2C_SR_EN);
+    	}
     }else if(event == I2C_EV_RX_CMPLT){
-        rx_flag = buf[1] + 1;
-
+    	if(phase == RX_LEN){
+    		phase = RX_DATA;
+    		if(rx_len > 0 && rx_len < 32){
+    		rx_wait = 1;
+    		}
+    	}else if(phase == RX_DATA){
+    		led_flag = 2;
+    		tx_done = 1;
+    	}
     }else if(event == I2C_ERROR_AF){
-        rx_flag = 3;
+    	tx_done = 0;
+        led_flag = 3;
         I2C_GenerateStopCondition(I2C2);
-        I2C_CloseTransmission(&i2c2);
+        I2C_CloseReception(&i2c2);
     }else{
-        rx_flag = 4;
+    	tx_done = 0;
+        led_flag = 4;
     }
 }
 
-int main(void)
-{
+int main(void){
+	tx_done = 0;
+	tx_len = strlen((char*)tx);
+
 	Button_Init();
     LED_Init();
     I2C2_GPIO_Init();
@@ -141,11 +158,19 @@ int main(void)
     	while(GPIO_ReadPin(GPIOE, GPIO_PIN_3) == 0);
     	Delay();
 
-    	I2C_Master_Transmit_IT(&i2c2, &tx, 1, SLAVE_ADDR, I2C_SR_EN);
+    	I2C_Master_Transmit_IT(&i2c2, tx, tx_len, SLAVE_ADDR, I2C_SR_EN);
 
-    	if(rx_flag >= 2){
-    		uint8_t blinks = rx_flag;
-    	    rx_flag = 0;
+    	while(i2c2.TxRxState != I2C_READY);
+
+    	if(rx_wait == 1){
+    		rx_wait = 0;
+    		I2C_Master_Receive_IT(&i2c2, rx, rx_len, SLAVE_ADDR, I2C_SR_DI);
+    		while(i2c2.TxRxState != I2C_READY);
+    	}
+
+    	if(led_flag >= 1){
+    		uint8_t blinks = led_flag;
+    	    led_flag = 0;
     	    for(uint32_t i = 0; i < blinks; i++){
     	    	GPIO_WritePin(GPIOA, GPIO_PIN_7, RESET);
     	    	Delay();
@@ -155,4 +180,3 @@ int main(void)
     	}
     }
 }
-

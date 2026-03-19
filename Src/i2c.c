@@ -4,7 +4,6 @@
  *  Created on: Mar 7, 2026
  *      Author: maksym
  */
-
 #include "i2c.h"
 
 //Unused function
@@ -223,33 +222,25 @@ void I2C_ExecuteAddressPhase_RX(I2C_REG_t *pI2Cx, uint8_t SlaveAddr){
 }
 
 void I2C_ClearADDRFlag(I2C_Handle_t *pI2C_Handle){
-
-	uint32_t dummyRead;
-
-	//check for device mode
-	if(pI2C_Handle->pI2Cx->SR2 & (1 << I2C_SR2_MSL)){
-		//master mode
-		if(pI2C_Handle->TxRxState == I2C_BUSY_IN_RX){
-			if(pI2C_Handle->RxSize == 1){
-				//first disable the ACK
-				I2C_AckControl(pI2C_Handle->pI2Cx, I2C_ACK_DISABLE);
-
-				//clear the ADDR flag
-				 dummyRead = pI2C_Handle->pI2Cx->SR1;
-				 dummyRead = pI2C_Handle->pI2Cx->SR2;
-				 (void)dummyRead;
-			}
-		}else{
-			 dummyRead = pI2C_Handle->pI2Cx->SR1;
-			 dummyRead = pI2C_Handle->pI2Cx->SR2;
-			 (void)dummyRead;
-		}
-	}else{
-		//slave mode
-		dummyRead = pI2C_Handle->pI2Cx->SR1;
-		dummyRead = pI2C_Handle->pI2Cx->SR2;
-		(void)dummyRead;
-	}
+    uint32_t dummyRead;
+    if(pI2C_Handle->pI2Cx->SR2 & (1 << I2C_SR2_MSL)){
+        if(pI2C_Handle->TxRxState == I2C_BUSY_IN_RX){
+            if(pI2C_Handle->RxSize == 1){
+                I2C_AckControl(pI2C_Handle->pI2Cx, I2C_ACK_DISABLE);
+            }
+            dummyRead = pI2C_Handle->pI2Cx->SR1;
+            dummyRead = pI2C_Handle->pI2Cx->SR2;
+            (void)dummyRead;
+        }else{
+            dummyRead = pI2C_Handle->pI2Cx->SR1;
+            dummyRead = pI2C_Handle->pI2Cx->SR2;
+            (void)dummyRead;
+        }
+    }else{
+        dummyRead = pI2C_Handle->pI2Cx->SR1;
+        dummyRead = pI2C_Handle->pI2Cx->SR2;
+        (void)dummyRead;
+    }
 }
 
 void I2C_GenerateStopCondition(I2C_REG_t *pI2Cx){
@@ -298,6 +289,12 @@ void I2C_ClearSTOPF(I2C_Handle_t *pI2C_Handle){
 	dummyRead = pI2C_Handle->pI2Cx->SR1;
 	dummyRead = pI2C_Handle->pI2Cx->CR1;
 	(void)dummyRead;
+}
+
+void I2C_Slave_EnableInterrupts(I2C_REG_t *pI2Cx){
+    pI2Cx->CR2 |= (1 << I2C_CR2_ITEVTEN);
+    pI2Cx->CR2 |= (1 << I2C_CR2_ITBUFEN);
+    pI2Cx->CR2 |= (1 << I2C_CR2_ITERREN);
 }
 /*********************************************
  * @fn           I2C_Master_Transmit
@@ -500,8 +497,6 @@ uint8_t I2C_Master_Transmit_IT(I2C_Handle_t *pI2C_Handle, uint8_t *pTxBuffer, ui
 		pI2C_Handle->DevAddr = SlaveAddr;
 		pI2C_Handle->Sr = sr;
 
-		I2C_GenerateStartCondition(pI2C_Handle->pI2Cx);
-
 		//Enable ITBUFEN control bit
 		pI2C_Handle->pI2Cx->CR2 |= (1 << I2C_CR2_ITBUFEN);
 
@@ -510,6 +505,8 @@ uint8_t I2C_Master_Transmit_IT(I2C_Handle_t *pI2C_Handle, uint8_t *pTxBuffer, ui
 
 		//Enable ITERREN control bit
 		pI2C_Handle->pI2Cx->CR2 |= (1 << I2C_CR2_ITERREN);
+
+		I2C_GenerateStartCondition(pI2C_Handle->pI2Cx);
 	}
 
 	return busystate;
@@ -540,15 +537,11 @@ uint8_t I2C_Master_Receive_IT(I2C_Handle_t *pI2C_Handle, uint8_t *pRxBuffer, uin
 		pI2C_Handle->DevAddr = SlaveAddr;
 		pI2C_Handle->Sr = sr;
 
-		I2C_GenerateStartCondition(pI2C_Handle->pI2Cx);
-
 		pI2C_Handle->pI2Cx->CR2 |= (1 << I2C_CR2_ITBUFEN);
-
-
 		pI2C_Handle->pI2Cx->CR2 |= (1 << I2C_CR2_ITEVTEN);
-
-
 		pI2C_Handle->pI2Cx->CR2 |= (1 << I2C_CR2_ITERREN);
+
+		I2C_GenerateStartCondition(pI2C_Handle->pI2Cx);
 	}
 
 	return busystate;
@@ -617,7 +610,7 @@ void I2C_IRQ_EV_Handler(I2C_Handle_t *pI2C_Handle){
 		//STOPF flag is set
 
 		//Clear the STOPF flag (SR1 is read and we need to write smt into CR1 register
-		 pI2C_Handle->pI2Cx->CR1 |= 0x0001;
+		I2C_ClearSTOPF(pI2C_Handle);
 
 		 I2C_ApplicationEventCallback(pI2C_Handle, I2C_EV_STOP);
 	}
