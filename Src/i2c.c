@@ -291,10 +291,16 @@ void I2C_ClearSTOPF(I2C_Handle_t *pI2C_Handle){
 	(void)dummyRead;
 }
 
-void I2C_Slave_EnableInterrupts(I2C_REG_t *pI2Cx){
+void I2C_Slave_EnableInterrupts(I2C_REG_t *pI2Cx, uint8_t enDi){
+	if(enDi == ENABLE){
     pI2Cx->CR2 |= (1 << I2C_CR2_ITEVTEN);
     pI2Cx->CR2 |= (1 << I2C_CR2_ITBUFEN);
     pI2Cx->CR2 |= (1 << I2C_CR2_ITERREN);
+	}else{
+		 pI2Cx->CR2 &= ~(1 << I2C_CR2_ITEVTEN);
+		 pI2Cx->CR2 &= ~(1 << I2C_CR2_ITBUFEN);
+		 pI2Cx->CR2 &= ~(1 << I2C_CR2_ITERREN);
+	}
 }
 /*********************************************
  * @fn           I2C_Master_Transmit

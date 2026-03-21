@@ -22,7 +22,7 @@
 #include <string.h>
 
 uint8_t tx[] = "Hello";
-uint8_t rx[34];
+uint8_t rx[8];
 uint8_t tx_len = 0;
 volatile uint8_t tx_done = 0;
 volatile uint8_t led_flag = 0;
@@ -101,7 +101,7 @@ void I2C2_Init(void){
 
 void I2C_ApplicationEventCallback(I2C_Handle_t *pI2C_Handle, uint8_t event){
 	if(event == I2C_EV_TX_CMPLT){
-		I2C_Master_Receive(&i2c2, rx, 33, SLAVE_ADDR, I2C_SR_EN);
+		I2C_Master_Receive(&i2c2, rx, 7, SLAVE_ADDR, I2C_SR_EN);
 	}else if(event == I2C_EV_RX_CMPLT){
 		led_flag = 1;
 		tx_done = 1;
